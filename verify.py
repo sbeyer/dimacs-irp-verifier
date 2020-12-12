@@ -79,6 +79,18 @@ class Solution:
         def err(error):
             raise self.ReadError(f"{fn}:{lineno}: {error}")
 
+        def expect_int(description, value):
+            try:
+                return int(value)
+            except ValueError:
+                err(f"expected (integral) {description}, got '{value}'")
+
+        def expect_float(description, value):
+            try:
+                return float(value)
+            except ValueError:
+                err(f"expected {description}, got '{value}'")
+
         for day_idx in range(instance.num_days):
             day = day_idx + 1
             lineno += 1
@@ -119,22 +131,17 @@ class Solution:
                     for idx, token in enumerate(right):
                         mod = idx % 5
                         if mod == 0:
-                            try:
-                                current = int(token)
-                                if current >= instance.num_nodes:
-                                    err(f"customer {current} does not exist")
-                            except ValueError:
-                                err(f"expected customer in route, got '{token}'")
+                            current = expect_int("customer in route", token)
+                            if current >= instance.num_nodes:
+                                err(f"customer {current} does not exist")
                         elif mod == 1:
                             if token != "(":
                                 err("expected '(' in route")
                         elif mod == 2:
-                            try:
-                                current = (current, int(token))
-                            except ValueError:
-                                err(
-                                    f"expected delivered quantity in route, got '{token}'"
-                                )
+                            current = (
+                                current,
+                                expect_int("delivered quantity in route", token),
+                            )
                         elif mod == 3:
                             if token != ")":
                                 err("expected ')' in route")
@@ -148,41 +155,28 @@ class Solution:
 
         lineno += 1
         line = lines.pop(0)
-        try:
-            self.cost_transportation = int(line)
-        except ValueError:
-            err(f"expected total transportation cost, got '{line}'")
+        self.cost_transportation = expect_int("total transportation cost", line)
 
         lineno += 1
         line = lines.pop(0)
-        try:
-            self.cost_inventory_customers = float(line)
-        except ValueError:
-            err(f"expected total inventory cost at customers, got '{line}'")
+        self.cost_inventory_customers = expect_float(
+            "total inventory cost at customers", line
+        )
 
         lineno += 1
         line = lines.pop(0)
-        try:
-            self.cost_inventory_depot = float(line)
-        except ValueError:
-            err(f"expected total inventory cost at depot, got '{line}'")
+        self.cost_inventory_depot = expect_float("total inventory cost at depot", line)
 
         lineno += 1
         line = lines.pop(0)
-        try:
-            self.cost = float(line)
-        except ValueError:
-            err(f"expected total solution cost, got '{line}'")
+        self.cost = expect_float("total solution cost", line)
 
         lineno += 1
         self.processor = lines.pop(0)
 
         lineno += 1
         line = lines.pop(0)
-        try:
-            self.time = float(line)
-        except ValueError:
-            err(f"expected solution time in seconds, got '{line}'")
+        self.time = expect_float("solution time in seconds", line)
 
         for line in lines:
             lineno += 1
