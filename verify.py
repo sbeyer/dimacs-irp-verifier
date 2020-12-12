@@ -91,10 +91,14 @@ class Solution:
             except ValueError:
                 err(f"expected {description}, got '{value}'")
 
+        def next_line():
+            nonlocal lineno
+            lineno += 1
+            return lines.pop(0)
+
         for day_idx in range(instance.num_days):
             day = day_idx + 1
-            lineno += 1
-            line = lines.pop(0)
+            line = next_line()
             data = line.split(" ")
             if len(data) != 2 or data[0] != "Day" or data[1] != str(day):
                 err(f"expected 'Day {day}', got '{line}'")
@@ -103,8 +107,7 @@ class Solution:
 
             for route_idx in range(instance.num_vehicles):
                 route = route_idx + 1
-                lineno += 1
-                line = lines.pop(0)
+                line = next_line()
                 data = line.split(": ")
                 if len(data) != 2:
                     err(f"expected 'Route {route}: <route>', got '{line}'")
@@ -153,29 +156,23 @@ class Solution:
                     if len(right) % 5 != 0:
                         err("route is invalid, check format!")
 
-        lineno += 1
-        line = lines.pop(0)
+        line = next_line()
         self.cost_transportation = expect_int("total transportation cost", line)
 
-        lineno += 1
-        line = lines.pop(0)
+        line = next_line()
         self.cost_inventory_customers = expect_float(
             "total inventory cost at customers", line
         )
 
-        lineno += 1
-        line = lines.pop(0)
+        line = next_line()
         self.cost_inventory_depot = expect_float("total inventory cost at depot", line)
 
-        lineno += 1
-        line = lines.pop(0)
+        line = next_line()
         self.cost = expect_float("total solution cost", line)
 
-        lineno += 1
-        self.processor = lines.pop(0)
+        self.processor = next_line()
 
-        lineno += 1
-        line = lines.pop(0)
+        line = next_line()
         self.time = expect_float("solution time in seconds", line)
 
         for line in lines:
