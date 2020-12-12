@@ -76,15 +76,16 @@ class Solution:
         lines = open(fn_solution, "r").read().splitlines()
         lineno = 0
 
+        def err(error):
+            raise self.ReadError(f"{fn}:{lineno}: {error}")
+
         for day_idx in range(instance.num_days):
             day = day_idx + 1
             lineno += 1
             line = lines.pop(0)
             data = line.split(" ")
             if len(data) != 2 or data[0] != "Day" or data[1] != str(day):
-                raise self.ReadError(
-                    f"{fn}:{lineno}: expected 'Day {day}', got '{line}'"
-                )
+                err(f"expected 'Day {day}', got '{line}'")
 
             self.routes.append([])
 
@@ -94,31 +95,23 @@ class Solution:
                 line = lines.pop(0)
                 data = line.split(": ")
                 if len(data) != 2:
-                    raise self.ReadError(
-                        f"{fn}:{lineno}: expected 'Route {route}: <route>', got '{line}'"
-                    )
+                    err(f"expected 'Route {route}: <route>', got '{line}'")
 
                 left = data[0].split(" ")
                 if len(left) != 2 or left[0] != "Route" or left[1] != str(route):
-                    raise self.ReadError(
-                        f"{fn}:{lineno}: expected 'Route {route}: <route>', got '{line}'"
-                    )
+                    err(f"expected 'Route {route}: <route>', got '{line}'")
 
                 right = data[1].split(" ")
                 if len(right) < 3:
-                    raise self.ReadError(
-                        f"{fn}:{lineno}: route is too short to be valid; use '0 - 0' for an empty route"
+                    err(
+                        "route is too short to be valid; use '0 - 0' for an empty route"
                     )
                 if right.pop(0) != "0":
-                    raise self.ReadError(
-                        f"{fn}:{lineno}: route does not start at depot"
-                    )
+                    err("route does not start at depot")
                 if right.pop() != "0":
-                    raise self.ReadError(f"{fn}:{lineno}: route does not end at depot")
+                    err("route does not end at depot")
                 if right.pop(0) != "-":
-                    raise self.ReadError(
-                        f"{fn}:{lineno}: expected first node delimiter '-' in route"
-                    )
+                    err("expected first node delimiter '-' in route")
 
                 self.routes[day_idx].append([])
 
@@ -129,77 +122,57 @@ class Solution:
                             try:
                                 current = int(token)
                                 if current >= instance.num_nodes:
-                                    raise self.ReadError(
-                                        f"{fn}:{lineno}: customer {current} does not exist"
-                                    )
+                                    err(f"customer {current} does not exist")
                             except ValueError:
-                                raise self.ReadError(
-                                    f"{fn}:{lineno}: expected customer in route, got '{token}'"
-                                )
+                                err(f"expected customer in route, got '{token}'")
                         elif mod == 1:
                             if token != "(":
-                                raise self.ReadError(
-                                    f"{fn}:{lineno}: expected '(' in route"
-                                )
+                                err("expected '(' in route")
                         elif mod == 2:
                             try:
                                 current = (current, int(token))
                             except ValueError:
-                                raise self.ReadError(
-                                    f"{fn}:{lineno}: expected delivered quantity in route, got '{token}'"
+                                err(
+                                    f"expected delivered quantity in route, got '{token}'"
                                 )
                         elif mod == 3:
                             if token != ")":
-                                raise self.ReadError(
-                                    f"{fn}:{lineno}: expected ')' in route"
-                                )
+                                err("expected ')' in route")
                         elif mod == 4:
                             if token != "-":
-                                raise self.ReadError(
-                                    f"{fn}:{lineno}: expected '-' delimiter in route"
-                                )
+                                err("expected '-' delimiter in route")
                             self.routes[day_idx][route_idx].append(current)
 
                     if len(right) % 5 != 0:
-                        raise self.ReadError(
-                            f"{fn}:{lineno}: route is invalid, check format!"
-                        )
+                        err("route is invalid, check format!")
 
         lineno += 1
         line = lines.pop(0)
         try:
             self.cost_transportation = int(line)
         except ValueError:
-            raise self.ReadError(
-                f"{fn}:{lineno}: expected total transportation cost, got '{line}'"
-            )
+            err(f"expected total transportation cost, got '{line}'")
 
         lineno += 1
         line = lines.pop(0)
         try:
             self.cost_inventory_customers = float(line)
         except ValueError:
-            raise self.ReadError(
-                f"{fn}:{lineno}: expected total inventory cost at customers, got '{line}'"
-            )
+            err(f"expected total inventory cost at customers, got '{line}'")
 
         lineno += 1
         line = lines.pop(0)
         try:
             self.cost_inventory_depot = float(line)
         except ValueError:
-            raise self.ReadError(
-                f"{fn}:{lineno}: expected total inventory cost at depot, got '{line}'"
-            )
+            err(f"expected total inventory cost at depot, got '{line}'")
 
         lineno += 1
         line = lines.pop(0)
         try:
             self.cost = float(line)
         except ValueError:
-            raise self.ReadError(
-                f"{fn}:{lineno}: expected total solution cost, got '{line}'"
-            )
+            err(f"expected total solution cost, got '{line}'")
 
         lineno += 1
         self.processor = lines.pop(0)
@@ -209,14 +182,12 @@ class Solution:
         try:
             self.time = float(line)
         except ValueError:
-            raise self.ReadError(
-                f"{fn}:{lineno}: expected solution time in seconds, got '{line}'"
-            )
+            err(f"expected solution time in seconds, got '{line}'")
 
         for line in lines:
             lineno += 1
             if line != "":
-                raise self.ReadError(f"{fn} contains junk in line {lineno}")
+                err(f"line contains unexpected junk '{line}', no more data expected")
 
 
 fn_instance = "example/S_abs5n5_4_L3.dat"
