@@ -93,14 +93,16 @@ class Solution:
             except ValueError:
                 err(f"expected {description}, got '{value}'")
 
-        def next_line():
+        def next_line(expected):
             nonlocal lineno
             lineno += 1
+            if len(lines) == 0:
+                err(f"missing line; expected {expected}")
             return lines.pop(0)
 
         for day_idx in range(instance.num_days):
             day = day_idx + 1
-            line = next_line()
+            line = next_line(f"'Day {day}'")
             data = line.split(" ")
             if len(data) != 2 or data[0] != "Day" or data[1] != str(day):
                 err(f"expected 'Day {day}', got '{line}'")
@@ -109,7 +111,7 @@ class Solution:
 
             for route_idx in range(instance.num_vehicles):
                 route = route_idx + 1
-                line = next_line()
+                line = next_line(f"'Route {route}: <route>'")
                 data = line.split(": ")
                 if len(data) != 2:
                     err(f"expected 'Route {route}: <route>', got '{line}'")
@@ -158,24 +160,27 @@ class Solution:
                     if len(right) % 5 != 0:
                         err("route is invalid, check format!")
 
-        line = next_line()
-        self.cost_transportation = expect_int("total transportation cost", line)
+        expected = "total transportation cost"
+        line = next_line(expected)
+        self.cost_transportation = expect_int(expected, line)
 
-        line = next_line()
-        self.cost_inventory_customers = expect_float(
-            "total inventory cost at customers", line
-        )
+        expected = "total inventory cost at customers"
+        line = next_line(expected)
+        self.cost_inventory_customers = expect_float(expected, line)
 
-        line = next_line()
-        self.cost_inventory_depot = expect_float("total inventory cost at depot", line)
+        expected = "total inventory cost at depot"
+        line = next_line(expected)
+        self.cost_inventory_depot = expect_float(expected, line)
 
-        line = next_line()
-        self.cost = expect_float("total solution cost", line)
+        expected = "total solution cost"
+        line = next_line(expected)
+        self.cost = expect_float(expected, line)
 
-        self.processor = next_line()
+        self.processor = next_line("processor")
 
-        line = next_line()
-        self.time = expect_float("solution time in seconds", line)
+        expected = "solution time in seconds"
+        line = next_line(expected)
+        self.time = expect_float(expected, line)
 
         for line in lines:
             lineno += 1
