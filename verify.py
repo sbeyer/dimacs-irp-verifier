@@ -11,6 +11,8 @@
 # You should have received a copy of the CC0 Public Domain Dedication along with this
 # software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+import sys
+
 
 class Instance:
     """Representation of IRP instance data"""
@@ -26,9 +28,9 @@ class Instance:
     inventory_min = []
     inventory_cost = []
 
-    def __init__(self, fn):
-        """Reads an instance file and initializes Instance members"""
-        lines = open(fn, "r").read().splitlines()
+    def __init__(self, handle):
+        """Reads an instance from handle and initializes Instance members"""
+        lines = handle.read().splitlines()
 
         meta_data = [int(val) for val in lines.pop(0).split()]
         (self.num_nodes, self.num_days, self.capacity, self.num_vehicles) = meta_data
@@ -69,15 +71,15 @@ class Solution:
     class ReadError(Exception):
         pass
 
-    def __init__(self, instance, fn):
-        """Reads a solution file and initializes Solution members"""
+    def __init__(self, instance, handle):
+        """Reads a solution from handle and initializes Solution members"""
         self.instance = instance
 
-        lines = open(fn_solution, "r").read().splitlines()
+        lines = handle.read().splitlines()
         lineno = 0
 
         def err(error):
-            raise self.ReadError(f"{fn}:{lineno}: {error}")
+            raise self.ReadError(f"{handle.name}:{lineno}: {error}")
 
         def expect_int(description, value):
             try:
@@ -181,11 +183,34 @@ class Solution:
                 err(f"line contains unexpected junk '{line}', no more data expected")
 
 
+def die(str):
+    print(str)
+    sys.exit(1)
+
+
 fn_instance = "example/S_abs5n5_4_L3.dat"
 fn_solution = "example/out_S_abs5n5_4_L3.txt"
 
+try:
+    instance = open(fn_instance, "r")
+except OSError as err:
+    die(f"Failed to open instance file {fn_instance}: {err.strerror}")
+except Exception as err:
+    die(f"Failed to open instance file {fn_instance}: {err}")
+
+try:
+    solution = open(fn_solution, "r")
+except OSError as err:
+    die(f"Failed to open instance file {fn_solution}: {err.strerror}")
+except Exception as err:
+    die(f"Failed to open instance file {fn_solution}: {err}")
+
 print("Instance:")
-instance = Instance(fn_instance)
+try:
+    instance = Instance(instance)
+except Exception as err:
+    die(f"Failed to read instance file {fn_instance}: {err}")
+
 print(f"Number of nodes: {instance.num_nodes}")
 print(f"Number of days: {instance.num_days}")
 print(f"Number of vehicles: {instance.num_vehicles}")
@@ -199,7 +224,11 @@ print(f"Daily level change: {instance.inventory_change}")
 
 print()
 print("Solution:")
-solution = Solution(instance, fn_solution)
+try:
+    solution = Solution(instance, solution)
+except Solution.ReadError as err:
+    die(f"Read error {err}")
+
 print(f"Routes: {solution.routes}")
 print(f"Total transportation cost: {solution.cost_transportation}")
 print(f"Total inventory cost at customers: {solution.cost_inventory_customers}")
