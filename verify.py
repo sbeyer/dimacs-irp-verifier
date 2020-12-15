@@ -57,6 +57,9 @@ class Solution:
     class ReadError(Exception):
         pass
 
+    class VerificationError(Exception):
+        pass
+
     def __init__(self, instance, handle):
         """Reads a solution from handle and initializes Solution members"""
         self.instance = instance
@@ -175,6 +178,72 @@ class Solution:
             if line != "":
                 err(f"line contains unexpected junk '{line}', no more data expected")
 
+    def verify(self):
+        """Verifies the solution or raises a VerificationError"""
+
+        def err(error):
+            raise self.VerificationError(error)
+
+        inventory = self.instance.inventory_start.copy()
+        cost_transportation = 0
+        cost_inventory_depot = 0.0
+        cost_inventory_customers = 0.0
+        node_names = ["depot"] + [
+            f"customer {i}" for i in range(1, self.instance.num_nodes + 1)
+        ]
+        day_names = [f"Day {d + 1}" for d in range(self.instance.num_days)]
+        route_names = [f"Route {r + 1}" for r in range(self.instance.num_vehicles)]
+
+        # this should never happen, because it means the instance is invalid, not the solution
+        # but we still check for it:
+        for i, level in enumerate(inventory):
+            if level < self.instance.inventory_min[i]:
+                err(
+                    f"Start inventory level of {node_names[i]} < minimum inventory level"
+                )
+            if level > self.instance.inventory_max[i]:
+                err(
+                    f"Start inventory level of {node_names[i]} > maximum inventory level"
+                )
+
+        for d, day in enumerate(day_names):
+            # each customer receives at most one delivery
+            customer_deliveries = [0 for _ in node_names]
+            for route in self.routes[d]:
+                for customer, _ in route:
+                    customer_deliveries[customer] += 1
+            for customer, delivery in enumerate(customer_deliveries):
+                if delivery > 1:
+                    err(
+                        f"{day}: {node_names[customer]} is delivered {delivery} times, expected <= 1"
+                    )
+
+            # check capacity and update depot level
+            for r, route in enumerate(self.routes[d]):
+                volume = sum([x for _, x in route])
+                inventory[0] -= volume
+                if volume > self.instance.capacity:
+                    err(
+                        f"{day}: {route_names[r]}: Capacity is exceeded: got {volume}, expected <= {self.instance.capacity}"
+                    )
+
+            # update inventories by delivery and check upper level limit
+            for r, route in enumerate(self.routes[d]):
+                for customer, delivery in route:
+                    inventory[customer] += delivery
+                    if inventory[customer] > self.instance.inventory_max[customer]:
+                        err(
+                            f"{day}: {route_names[r]}: {node_names[customer]} is delivered {delivery} units, new level is {inventory[customer]}, expecting <= {self.instance.inventory_max[customer]}"
+                        )
+
+            # update inventories by daily change and check lower level limit
+            for i, change in enumerate(self.instance.inventory_change):
+                inventory[i] += change
+                if inventory[i] < self.instance.inventory_min[i]:
+                    err(
+                        f"{day}: new level of {node_names[i]} becomes {inventory[i]} units, expecting >= {self.instance.inventory_min[i]}"
+                    )
+
 
 def handle_arguments(script, instance_path=None, solution_dir=None, remaining=None):
     import os
@@ -243,6 +312,11 @@ def verify(fn_instance, fn_solution):
     print(f"Total cost: {solution.cost}")
     print(f"Used processor: {solution.processor}")
     print(f"Time: {solution.time}")
+
+    try:
+        solution.verify()
+    except Solution.VerificationError as err:
+        return fail(f"Verification error: {err}")
 
     return True
 
