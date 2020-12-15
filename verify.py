@@ -11,9 +11,6 @@
 # You should have received a copy of the CC0 Public Domain Dedication along with this
 # software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-import os
-import sys
-
 
 class Instance:
     """Representation of IRP instance data"""
@@ -189,69 +186,78 @@ class Solution:
                 err(f"line contains unexpected junk '{line}', no more data expected")
 
 
-def die(str):
-    print(str)
+import os
+import sys
+
+
+def die(error):
+    print(error)
     sys.exit(1)
 
 
-def handle_arguments(script, instance_filepath=None, solution_dir=None, remaining=None):
-    if instance_filepath is None or remaining is not None:
+def handle_arguments(script, instance_path=None, solution_dir=None, remaining=None):
+    if instance_path is None or remaining is not None:
         die(f"Usage: {script} <instance file> [<directory containing solution file>]")
 
-    instance_dir, instance_file = os.path.split(instance_filepath)
+    instance_dir, instance_file = os.path.split(instance_path)
     instance_file_base, instance_file_ext = os.path.splitext(instance_file)
     solution_file = f"out_{instance_file_base}.txt"
     if solution_dir is None:
         solution_dir = instance_dir
-    solution_filepath = os.path.join(solution_dir, solution_file)
+    solution_path = os.path.join(solution_dir, solution_file)
 
-    return instance_filepath, solution_filepath
+    return instance_path, solution_path
 
 
-fn_instance, fn_solution = handle_arguments(*sys.argv)
+def verify(args):
+    fn_instance, fn_solution = handle_arguments(*args)
 
-try:
-    instance = open(fn_instance, "r")
-except OSError as err:
-    die(f"Failed to open instance file {fn_instance}: {err.strerror}")
-except Exception as err:
-    die(f"Failed to open instance file {fn_instance}: {err}")
+    try:
+        instance = open(fn_instance, "r")
+    except OSError as err:
+        die(f"Failed to open instance file {fn_instance}: {err.strerror}")
+    except Exception as err:
+        die(f"Failed to open instance file {fn_instance}: {err}")
 
-try:
-    solution = open(fn_solution, "r")
-except OSError as err:
-    die(f"Failed to open instance file {fn_solution}: {err.strerror}")
-except Exception as err:
-    die(f"Failed to open instance file {fn_solution}: {err}")
+    try:
+        solution = open(fn_solution, "r")
+    except OSError as err:
+        die(f"Failed to open instance file {fn_solution}: {err.strerror}")
+    except Exception as err:
+        die(f"Failed to open instance file {fn_solution}: {err}")
 
-print("Instance:")
-try:
-    instance = Instance(instance)
-except Exception as err:
-    die(f"Failed to read instance file {fn_instance}: {err}")
+    print("Instance:")
+    try:
+        instance = Instance(instance)
+    except Exception as err:
+        die(f"Failed to read instance file {fn_instance}: {err}")
 
-print(f"Number of nodes: {instance.num_nodes}")
-print(f"Number of days: {instance.num_days}")
-print(f"Number of vehicles: {instance.num_vehicles}")
-print(f"Vehicle capacity: {instance.capacity}")
-print(f"Positions: {instance.pos}")
-print(f"Inventory start levels: {instance.inventory_start}")
-print(f"Inventory max levels: {instance.inventory_max}")
-print(f"Inventory min levels: {instance.inventory_min}")
-print(f"Inventory cost: {instance.inventory_cost}")
-print(f"Daily level change: {instance.inventory_change}")
+    print(f"Number of nodes: {instance.num_nodes}")
+    print(f"Number of days: {instance.num_days}")
+    print(f"Number of vehicles: {instance.num_vehicles}")
+    print(f"Vehicle capacity: {instance.capacity}")
+    print(f"Positions: {instance.pos}")
+    print(f"Inventory start levels: {instance.inventory_start}")
+    print(f"Inventory max levels: {instance.inventory_max}")
+    print(f"Inventory min levels: {instance.inventory_min}")
+    print(f"Inventory cost: {instance.inventory_cost}")
+    print(f"Daily level change: {instance.inventory_change}")
 
-print()
-print("Solution:")
-try:
-    solution = Solution(instance, solution)
-except Solution.ReadError as err:
-    die(f"Read error {err}")
+    print()
+    print("Solution:")
+    try:
+        solution = Solution(instance, solution)
+    except Solution.ReadError as err:
+        die(f"Read error {err}")
 
-print(f"Routes: {solution.routes}")
-print(f"Total transportation cost: {solution.cost_transportation}")
-print(f"Total inventory cost at customers: {solution.cost_inventory_customers}")
-print(f"Total inventory cost at depot: {solution.cost_inventory_depot}")
-print(f"Total cost: {solution.cost}")
-print(f"Used processor: {solution.processor}")
-print(f"Time: {solution.time}")
+    print(f"Routes: {solution.routes}")
+    print(f"Total transportation cost: {solution.cost_transportation}")
+    print(f"Total inventory cost at customers: {solution.cost_inventory_customers}")
+    print(f"Total inventory cost at depot: {solution.cost_inventory_depot}")
+    print(f"Total cost: {solution.cost}")
+    print(f"Used processor: {solution.processor}")
+    print(f"Time: {solution.time}")
+
+
+if __name__ == "__main__":
+    verify(sys.argv)
