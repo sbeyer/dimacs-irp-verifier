@@ -186,18 +186,12 @@ class Solution:
                 err(f"line contains unexpected junk '{line}', no more data expected")
 
 
-import os
-import sys
-
-
-def die(error):
-    print(error)
-    sys.exit(1)
-
-
 def handle_arguments(script, instance_path=None, solution_dir=None, remaining=None):
+    import os
+
     if instance_path is None or remaining is not None:
-        die(f"Usage: {script} <instance file> [<directory containing solution file>]")
+        print(f"Usage: {script} <instance file> [<directory containing solution file>]")
+        return None, None
 
     instance_dir, instance_file = os.path.split(instance_path)
     instance_file_base, instance_file_ext = os.path.splitext(instance_file)
@@ -209,28 +203,30 @@ def handle_arguments(script, instance_path=None, solution_dir=None, remaining=No
     return instance_path, solution_path
 
 
-def verify(args):
-    fn_instance, fn_solution = handle_arguments(*args)
+def verify(fn_instance, fn_solution):
+    def fail(error):
+        print(error)
+        return False
 
     try:
         instance = open(fn_instance, "r")
     except OSError as err:
-        die(f"Failed to open instance file {fn_instance}: {err.strerror}")
+        return fail(f"Failed to open instance file {fn_instance}: {err.strerror}")
     except Exception as err:
-        die(f"Failed to open instance file {fn_instance}: {err}")
+        return fail(f"Failed to open instance file {fn_instance}: {err}")
 
     try:
         solution = open(fn_solution, "r")
     except OSError as err:
-        die(f"Failed to open instance file {fn_solution}: {err.strerror}")
+        return fail(f"Failed to open instance file {fn_solution}: {err.strerror}")
     except Exception as err:
-        die(f"Failed to open instance file {fn_solution}: {err}")
+        return fail(f"Failed to open instance file {fn_solution}: {err}")
 
     print("Instance:")
     try:
         instance = Instance(instance)
     except Exception as err:
-        die(f"Failed to read instance file {fn_instance}: {err}")
+        return fail(f"Failed to read instance file {fn_instance}: {err}")
 
     print(f"Number of nodes: {instance.num_nodes}")
     print(f"Number of days: {instance.num_days}")
@@ -248,7 +244,7 @@ def verify(args):
     try:
         solution = Solution(instance, solution)
     except Solution.ReadError as err:
-        die(f"Read error {err}")
+        return fail(f"Read error {err}")
 
     print(f"Routes: {solution.routes}")
     print(f"Total transportation cost: {solution.cost_transportation}")
@@ -258,6 +254,15 @@ def verify(args):
     print(f"Used processor: {solution.processor}")
     print(f"Time: {solution.time}")
 
+    return True
+
 
 if __name__ == "__main__":
-    verify(sys.argv)
+    import sys
+
+    fn_instance, fn_solution = handle_arguments(*sys.argv)
+    if fn_instance is None or fn_solution is None:
+        sys.exit(1)
+
+    if verify(fn_instance, fn_solution) is False:
+        sys.exit(2)
