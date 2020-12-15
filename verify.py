@@ -11,6 +11,7 @@
 # You should have received a copy of the CC0 Public Domain Dedication along with this
 # software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+import os
 import sys
 
 
@@ -193,8 +194,21 @@ def die(str):
     sys.exit(1)
 
 
-fn_instance = "example/S_abs5n5_4_L3.dat"
-fn_solution = "example/out_S_abs5n5_4_L3.txt"
+def handle_arguments(script, instance_filepath=None, solution_dir=None, remaining=None):
+    if instance_filepath is None or remaining is not None:
+        die(f"Usage: {script} <instance file> [<directory containing solution file>]")
+
+    instance_dir, instance_file = os.path.split(instance_filepath)
+    instance_file_base, instance_file_ext = os.path.splitext(instance_file)
+    solution_file = f"out_{instance_file_base}.txt"
+    if solution_dir is None:
+        solution_dir = instance_dir
+    solution_filepath = os.path.join(solution_dir, solution_file)
+
+    return instance_filepath, solution_filepath
+
+
+fn_instance, fn_solution = handle_arguments(*sys.argv)
 
 try:
     instance = open(fn_instance, "r")
