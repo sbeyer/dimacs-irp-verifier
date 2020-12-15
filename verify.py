@@ -15,23 +15,19 @@
 class Instance:
     """Representation of IRP instance data"""
 
-    num_nodes = 0
-    num_days = 0
-    capacity = 0
-    num_vehicles = 0
-    pos = []
-    inventory_start = []
-    inventory_change = []
-    inventory_max = []
-    inventory_min = []
-    inventory_cost = []
-
     def __init__(self, handle):
         """Reads an instance from handle and initializes Instance members"""
         lines = handle.read().splitlines()
 
         meta_data = [int(val) for val in lines.pop(0).split()]
-        (self.num_nodes, self.num_days, self.capacity, self.num_vehicles) = meta_data
+        self.num_nodes, self.num_days, self.capacity, self.num_vehicles = meta_data
+
+        self.pos = []
+        self.inventory_start = []
+        self.inventory_change = []
+        self.inventory_max = []
+        self.inventory_min = []
+        self.inventory_cost = []
 
         depot_data = lines.pop(0).split()
         (_, x, y, *depot_data) = depot_data
@@ -57,14 +53,6 @@ class Instance:
 
 class Solution:
     """Representation of IRP solution data"""
-
-    routes = []
-    cost_transportation = 0
-    cost_inventory_customers = 0.0
-    cost_inventory_depot = 0.0
-    cost = 0.0
-    processor = ""
-    time = 0.0
 
     class ReadError(Exception):
         pass
@@ -97,6 +85,8 @@ class Solution:
             if len(lines) == 0:
                 err(f"missing line; expected {expected}")
             return lines.pop(0)
+
+        self.routes = []
 
         for day_idx in range(instance.num_days):
             day = day_idx + 1
