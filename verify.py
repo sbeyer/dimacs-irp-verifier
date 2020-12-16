@@ -326,37 +326,15 @@ def verify(fn_instance, fn_solution):
     except Exception as err:
         return fail(f"Failed to open solution file {fn_solution}: {err}")
 
-    print("Instance:")
     try:
         instance = Instance(instance)
     except Exception as err:
         return fail(f"Failed to read instance file {fn_instance}: {err}")
 
-    print(f"Number of nodes: {instance.num_nodes}")
-    print(f"Number of days: {instance.num_days}")
-    print(f"Number of vehicles: {instance.num_vehicles}")
-    print(f"Vehicle capacity: {instance.capacity}")
-    print(f"Positions: {instance.pos}")
-    print(f"Inventory start levels: {instance.inventory_start}")
-    print(f"Inventory max levels: {instance.inventory_max}")
-    print(f"Inventory min levels: {instance.inventory_min}")
-    print(f"Inventory cost: {instance.inventory_cost}")
-    print(f"Daily level change: {instance.inventory_change}")
-
-    print()
-    print("Solution:")
     try:
         solution = Solution(instance, solution)
     except Solution.ReadError as err:
         return fail(f"Read error {err}")
-
-    print(f"Routes: {solution.routes}")
-    print(f"Total transportation cost: {solution.cost_transportation}")
-    print(f"Total inventory cost at customers: {solution.cost_inventory_customers}")
-    print(f"Total inventory cost at depot: {solution.cost_inventory_depot}")
-    print(f"Total cost: {solution.cost}")
-    print(f"Used processor: {solution.processor}")
-    print(f"Time: {solution.time}")
 
     try:
         solution.verify()
