@@ -184,14 +184,23 @@ class Solution:
         def err(error):
             raise self.VerificationError(error)
 
+        def expect_equal(description, expected, actual):
+            if expected != actual:
+                err(f"{description}: expected {expected}, got {actual}")
+
         def expect_equal_float(description, expected, actual):
             """Compare expected and actual float by its string representation with 2 decimal places"""
             expected_formatted = "{:.2f}".format(expected)
             actual_formatted = "{:.2f}".format(actual)
-            if expected_formatted != actual_formatted:
-                err(
-                    f"{description}: expected {expected_formatted}, got {actual_formatted}"
-                )
+            expect_equal(description, expected_formatted, actual_formatted)
+
+        def rounded_distance(s, t):
+            """Returns the Euclidean distance between s and t, rounded to integer"""
+            import math
+
+            s_x, s_y = self.instance.pos[s]
+            t_x, t_y = self.instance.pos[t]
+            return int(math.sqrt((s_x - t_x) ** 2 + (s_y - t_y) ** 2) + 0.5)
 
         inventory = self.instance.inventory_start.copy()
         cost_transportation = 0
@@ -215,6 +224,12 @@ class Solution:
                 )
 
         for d, day in enumerate(day_names):
+            # compute route costs
+            for route in self.routes[d]:
+                tour = [0] + [x for x, _ in route] + [0]
+                for s, t in zip(tour[:-1], tour[1:]):
+                    cost_transportation += rounded_distance(s, t)
+
             # each customer receives at most one delivery
             customer_deliveries = [0 for _ in node_names]
             for route in self.routes[d]:
@@ -255,6 +270,10 @@ class Solution:
             # update inventory costs
             for i, cost in enumerate(self.instance.inventory_cost):
                 cost_inventory[i] += cost * inventory[i]
+
+        expect_equal(
+            "total transportation cost", cost_transportation, self.cost_transportation
+        )
 
         expect_equal_float(
             "total inventory cost at customers",
