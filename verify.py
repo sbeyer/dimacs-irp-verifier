@@ -277,9 +277,9 @@ def verify(fn_instance, fn_solution):
     try:
         solution = open(fn_solution, "r")
     except OSError as err:
-        return fail(f"Failed to open instance file {fn_solution}: {err.strerror}")
+        return fail(f"Failed to open solution file {fn_solution}: {err.strerror}")
     except Exception as err:
-        return fail(f"Failed to open instance file {fn_solution}: {err}")
+        return fail(f"Failed to open solution file {fn_solution}: {err}")
 
     print("Instance:")
     try:
