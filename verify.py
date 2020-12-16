@@ -184,13 +184,21 @@ class Solution:
         def err(error):
             raise self.VerificationError(error)
 
+        def expect_equal_float(description, expected, actual):
+            """Compare expected and actual float by its string representation with 2 decimal places"""
+            expected_formatted = "{:.2f}".format(expected)
+            actual_formatted = "{:.2f}".format(actual)
+            if expected_formatted != actual_formatted:
+                err(
+                    f"{description}: expected {expected_formatted}, got {actual_formatted}"
+                )
+
         inventory = self.instance.inventory_start.copy()
         cost_transportation = 0
-        cost_inventory_depot = 0.0
-        cost_inventory_customers = 0.0
         node_names = ["depot"] + [
             f"customer {i}" for i in range(1, self.instance.num_nodes + 1)
         ]
+        cost_inventory = [0.0 for x in node_names]
         day_names = [f"Day {d + 1}" for d in range(self.instance.num_days)]
         route_names = [f"Route {r + 1}" for r in range(self.instance.num_vehicles)]
 
@@ -243,6 +251,24 @@ class Solution:
                     err(
                         f"{day}: new level of {node_names[i]} becomes {inventory[i]} units, expecting >= {self.instance.inventory_min[i]}"
                     )
+
+            # update inventory costs
+            for i, cost in enumerate(self.instance.inventory_cost):
+                cost_inventory[i] += cost * inventory[i]
+
+        expect_equal_float(
+            "total inventory cost at customers",
+            cost_inventory[0],
+            self.cost_inventory_customers,
+        )
+        expect_equal_float(
+            "total inventory cost at depot",
+            sum(cost_inventory[1:]),
+            self.cost_inventory_depot,
+        )
+        expect_equal_float(
+            "total cost", cost_transportation + sum(cost_inventory), self.cost
+        )
 
 
 def handle_arguments(script, instance_path=None, solution_dir=None, remaining=None):
