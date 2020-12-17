@@ -17,18 +17,18 @@ class Instance:
 
     def __init__(self, handle):
         """Reads an instance from handle and initializes Instance members"""
-        self.init(*handle.read().splitlines())
+        self.__init_by_lines(*handle.read().splitlines())
 
-    def init(self, meta_line, depot_line, *customer_lines):
+    def __init_by_lines(self, meta_line, depot_line, *customer_lines):
         meta_data = [int(val) for val in meta_line.split()]
         self.num_nodes, self.num_days, self.capacity, self.num_vehicles = meta_data
 
-        self.init_node_lists_by_depot(*depot_line.split())
+        self.__init_node_lists_by_depot(*depot_line.split())
 
         for customer_line in customer_lines:
-            self.append_node_lists_by_customer(*customer_line.split())
+            self.__append_node_lists_by_customer(*customer_line.split())
 
-    def init_node_lists_by_depot(self, index, x, y, start, change, cost):
+    def __init_node_lists_by_depot(self, index, x, y, start, change, cost):
         self.pos = [(float(x), float(y))]
         self.inventory_start = [int(start)]
         self.inventory_max = [int(start) + int(change) * self.num_days]
@@ -36,7 +36,7 @@ class Instance:
         self.inventory_change = [int(change)]
         self.inventory_cost = [float(cost)]
 
-    def append_node_lists_by_customer(self, index, x, y, start, u, l, change, cost):
+    def __append_node_lists_by_customer(self, index, x, y, start, u, l, change, cost):
         self.pos.append((float(x), float(y)))
         self.inventory_start.append(int(start))
         self.inventory_max.append(int(u))
