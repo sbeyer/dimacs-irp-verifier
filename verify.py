@@ -172,7 +172,7 @@ class Solution:
             if line != "":
                 err(f"line contains unexpected junk '{line}', no more data expected")
 
-    def verify(self):
+    def verify_solution(self):
         """Verifies the solution or raises a VerificationError"""
 
         def err(error):
@@ -283,6 +283,11 @@ class Solution:
             "total cost", cost_transportation + sum(cost_inventory), self.cost
         )
 
+    def verify_time(self, processors):
+        """Verifies the processor/time part of the Solution or raises a VerificationError"""
+        # TODO
+        pass
+
 
 def handle_arguments(script, instance_path=None, solution_dir=None, remaining=None):
     import os
@@ -301,7 +306,73 @@ def handle_arguments(script, instance_path=None, solution_dir=None, remaining=No
     return instance_path, solution_path
 
 
-def verify(fn_instance, fn_solution):
+def fetch_passmark_data():
+    import urllib.request
+
+    url = "https://www.cpubenchmark.net/singleThread.html"
+    prod_start = b'<span class="prdname">'
+    prod_end = b"</span>"
+    score_start = b'<span class="count">'
+    score_end = b"</span>"
+
+    print(f" -> Fetching {url}...")
+
+    response = urllib.request.urlopen(url)
+    data = response.read()
+
+    print(" -> Got it! Now parsing...")
+
+    processors = {}
+
+    while True:
+        start = data.find(prod_start)
+        if start < 0:
+            break
+        data = data[start + len(prod_start) :]
+        end = data.find(prod_end)
+        prodname = data[:end].decode()
+        data = data[end + len(prod_end) :]
+
+        start = data.find(score_start)
+        data = data[start + len(score_start) :]
+        end = data.find(score_end)
+        score = int(data[:end].replace(b",", b""))
+        data = data[end + len(score_end) :]
+
+        processors[prodname] = score
+
+    print(" -> Good! I have the necessary processor information now!")
+    print("")
+
+    return processors
+
+
+def obtain_passmark_data():
+    import json
+
+    fn_passmark = "processors.json"
+
+    try:
+        with open(fn_passmark, "r") as infile_passmark:
+            processors = json.load(infile_passmark)
+    except Exception as err:
+        print(f"Failed to read file {fn_passmark} with processor information: {err}")
+        try:
+            processors = fetch_passmark_data()
+        except Exception as err:
+            print(f"Failed to fetch data from server: {err}")
+            return None
+
+        try:
+            with open(fn_passmark, "w") as outfile_passmark:
+                json.dump(processors, outfile_passmark, indent=4)
+        except:
+            print(f"Failed to save fetched data to {fn_passmark}")
+
+    return processors
+
+
+def verify(fn_instance, fn_solution, processors):
     def fail(error):
         print(error)
         return False
@@ -331,7 +402,8 @@ def verify(fn_instance, fn_solution):
         return fail(f"Read error {err}")
 
     try:
-        solution.verify()
+        solution.verify_solution()
+        solution.verify_time(processors)
     except Solution.VerificationError as err:
         return fail(f"Verification error: {err}")
 
@@ -345,5 +417,9 @@ if __name__ == "__main__":
     if fn_instance is None or fn_solution is None:
         sys.exit(1)
 
-    if verify(fn_instance, fn_solution) is False:
+    processors = obtain_passmark_data()
+    if processors is None:
+        sys.exit(2)
+
+    if verify(fn_instance, fn_solution, processors) is False:
         sys.exit(2)
