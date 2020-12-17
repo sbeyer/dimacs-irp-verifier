@@ -17,38 +17,33 @@ class Instance:
 
     def __init__(self, handle):
         """Reads an instance from handle and initializes Instance members"""
-        lines = handle.read().splitlines()
 
-        meta_data = [int(val) for val in lines.pop(0).split()]
-        self.num_nodes, self.num_days, self.capacity, self.num_vehicles = meta_data
+        def init_with_depot(index, x, y, start, change, cost):
+            self.pos = [(float(x), float(y))]
+            self.inventory_start = [int(start)]
+            self.inventory_max = [int(start) + int(change) * self.num_days]
+            self.inventory_min = [0]
+            self.inventory_change = [int(change)]
+            self.inventory_cost = [float(cost)]
 
-        self.pos = []
-        self.inventory_start = []
-        self.inventory_change = []
-        self.inventory_max = []
-        self.inventory_min = []
-        self.inventory_cost = []
-
-        depot_data = lines.pop(0).split()
-        (_, x, y, *depot_data) = depot_data
-        depot_start = int(depot_data.pop(0))
-        depot_change = int(depot_data.pop(0))
-        self.pos.append((float(x), float(y)))
-        self.inventory_start.append(depot_start)
-        self.inventory_max.append(depot_start + depot_change * self.num_days)
-        self.inventory_min.append(0)
-        self.inventory_change.append(depot_change)
-        self.inventory_cost.append(float(depot_data.pop(0)))
-
-        for line in lines:
-            customer_data = line.split()
-            (_, x, y, *customer_data) = customer_data
+        def append_customer(index, x, y, start, u, l, change, cost):
             self.pos.append((float(x), float(y)))
-            self.inventory_start.append(int(customer_data.pop(0)))
-            self.inventory_max.append(int(customer_data.pop(0)))
-            self.inventory_min.append(int(customer_data.pop(0)))
-            self.inventory_change.append(-int(customer_data.pop(0)))
-            self.inventory_cost.append(float(customer_data.pop(0)))
+            self.inventory_start.append(int(start))
+            self.inventory_max.append(int(u))
+            self.inventory_min.append(int(l))
+            self.inventory_change.append(-int(change))
+            self.inventory_cost.append(float(cost))
+
+        def read_lines(meta_line, depot_line, *customer_lines):
+            meta_data = [int(val) for val in meta_line.split()]
+            self.num_nodes, self.num_days, self.capacity, self.num_vehicles = meta_data
+
+            init_with_depot(*depot_line.split())
+
+            for customer_line in customer_lines:
+                append_customer(*customer_line.split())
+
+        read_lines(*handle.read().splitlines())
 
 
 class Solution:
