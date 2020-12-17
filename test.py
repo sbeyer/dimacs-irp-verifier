@@ -43,3 +43,5 @@ for case in pass_cases:
 
 for case in fail_cases:
     assert verify(*case) is False, f"Case {case} should fail"
+
+print("All tests passed!")
