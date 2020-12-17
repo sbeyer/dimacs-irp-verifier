@@ -292,6 +292,16 @@ class Solution:
         if self.processor not in processors:
             err(f"processor '{self.processor}' is unknown")
 
+        mark = processors[self.processor]
+        scaling_factor = 2000 / mark
+        base_timelimit = 30 * 60  # 30 minutes in seconds
+        timelimit = scaling_factor * base_timelimit
+
+        if self.time > timelimit:
+            err(
+                f"computation time of {self.time} seconds exceeds time limit of {timelimit:.2f} seconds"
+            )
+
 
 def handle_arguments(script, instance_path=None, solution_dir=None, remaining=None):
     import os
