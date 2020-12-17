@@ -176,7 +176,7 @@ class Solution:
         """Verifies the solution or raises a VerificationError"""
 
         def err(error):
-            raise self.VerificationError(error)
+            raise self.VerificationError(f"Solution verification error: {error}")
 
         def expect_equal(description, expected, actual):
             if expected != actual:
@@ -285,8 +285,12 @@ class Solution:
 
     def verify_time(self, processors):
         """Verifies the processor/time part of the Solution or raises a VerificationError"""
-        # TODO
-        pass
+
+        def err(error):
+            raise self.VerificationError(f"Time verification error: {error}")
+
+        if self.processor not in processors:
+            err(f"processor '{self.processor}' is unknown")
 
 
 def handle_arguments(script, instance_path=None, solution_dir=None, remaining=None):
@@ -405,7 +409,7 @@ def verify(fn_instance, fn_solution, processors):
         solution.verify_solution()
         solution.verify_time(processors)
     except Solution.VerificationError as err:
-        return fail(f"Verification error: {err}")
+        return fail(err)
 
     return True
 
