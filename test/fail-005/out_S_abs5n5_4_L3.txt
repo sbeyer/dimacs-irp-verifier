@@ -1,0 +1,5 @@
+Day 1
+Route 1: 0 - 4 ( 81 ) - 0
+Route 2: 0 - 0
+Route 3: 0 - 0
+Route 4: 0 - 0
