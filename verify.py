@@ -437,3 +437,5 @@ if __name__ == "__main__":
 
     if verify(fn_instance, fn_solution, processors) is False:
         sys.exit(2)
+
+    print(f"Verification of {fn_solution} successful")
