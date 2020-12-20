@@ -224,17 +224,25 @@ class Solution:
             t_x, t_y = self.instance.pos[t]
             return int(math.sqrt((s_x - t_x) ** 2 + (s_y - t_y) ** 2) + 0.5)
 
+        def verify_transportation_costs():
+            cost_transportation = 0
+
+            for day_routes in self.routes:
+                for route in day_routes:
+                    tour = [0] + [x for x, _ in route] + [0]
+                    for s, t in zip(tour[:-1], tour[1:]):
+                        cost_transportation += rounded_distance(s, t)
+
+            expect_equal(
+                "total transportation cost",
+                cost_transportation,
+                self.cost_transportation,
+            )
+
         inventory = self.instance.inventory_start.copy()
-        cost_transportation = 0
         cost_inventory = [0.0 for x in self.instance.nodes]
 
         for d, day in enumerate(self.instance.days):
-            # compute route costs
-            for route in self.routes[d]:
-                tour = [0] + [x for x, _ in route] + [0]
-                for s, t in zip(tour[:-1], tour[1:]):
-                    cost_transportation += rounded_distance(s, t)
-
             # each customer receives at most one delivery
             customer_deliveries = [0 for _ in self.instance.nodes]
             for route in self.routes[d]:
@@ -281,9 +289,7 @@ class Solution:
             for i, cost in enumerate(self.instance.inventory_cost):
                 cost_inventory[i] += cost * inventory[i]
 
-        expect_equal(
-            "total transportation cost", cost_transportation, self.cost_transportation
-        )
+        verify_transportation_costs()
 
         expect_equal_float(
             "total inventory cost at customers",
@@ -296,7 +302,7 @@ class Solution:
             self.cost_inventory_depot,
         )
         expect_equal_float(
-            "total cost", cost_transportation + sum(cost_inventory), self.cost
+            "total cost", self.cost_transportation + sum(cost_inventory), self.cost
         )
 
     def verify_time(self, processors):
