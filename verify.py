@@ -48,10 +48,13 @@ class Instance:
 class Solution:
     """Representation of IRP solution data"""
 
-    class ReadError(Exception):
+    class Error(Exception):
         pass
 
-    class VerificationError(Exception):
+    class ReadError(Error):
+        pass
+
+    class VerificationError(Error):
         pass
 
     def __init__(self, instance, handle):
@@ -419,7 +422,7 @@ def verify(fn_instance, fn_solution, processors):
         solution = Solution(instance, solution)
         solution.verify_solution()
         solution.verify_time(processors)
-    except Exception as err:
+    except Solution.Error as err:
         return fail(f"{fn_solution}: {err}")
 
     return True
