@@ -419,7 +419,7 @@ def verify(fn_instance, fn_solution, processors):
         solution.verify_solution()
         solution.verify_time(processors)
     except Solution.VerificationError as err:
-        return fail(err)
+        return fail(f"{fn_solution}: {err}")
 
     return True
 
