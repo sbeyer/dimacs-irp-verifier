@@ -1,0 +1,21 @@
+Day 1
+Route 1: 0 - 4 [ 81 ) - 0
+Route 2: 0 - 0
+Route 3: 0 - 0
+Route 4: 0 - 0
+Day 2
+Route 1: 0 - 3 ( 72 ) - 0
+Route 2: 0 - 4 ( 81 ) - 0
+Route 3: 0 - 5 ( 15 ) - 2 ( 47 ) - 1 ( 19 ) - 0
+Route 4: 0 - 0
+Day 3
+Route 1: 0 - 0
+Route 2: 0 - 0
+Route 3: 0 - 0
+Route 4: 0 - 0
+1548
+41.76
+20.08
+1609.84
+Intel Core i3-6300 @ 3.80GHz
+58.23

@@ -16,7 +16,7 @@ import os
 from verify import handle_arguments, obtain_passmark_data, verify
 
 directory = "test"
-instance_file = "S_abs5n5_4_L3.dat"
+instance_file = "S_abs5n5_test.dat"
 fail_prefix = "fail-"
 pass_prefix = "pass-"
 
