@@ -224,6 +224,19 @@ class Solution:
             t_x, t_y = self.instance.pos[t]
             return int(math.sqrt((s_x - t_x) ** 2 + (s_y - t_y) ** 2) + 0.5)
 
+        def verify_at_most_one_delivery_to_each_customer_per_day():
+            for d, day in enumerate(self.instance.days):
+                customer_deliveries = [0 for _ in self.instance.nodes]
+                for route in self.routes[d]:
+                    for customer, _ in route:
+                        customer_deliveries[customer] += 1
+
+                for customer, delivery in enumerate(customer_deliveries):
+                    if delivery > 1:
+                        err(
+                            f"{day}: {self.instance.nodes[customer]} is delivered {delivery} times, expected <= 1"
+                        )
+
         def verify_transportation_costs():
             cost_transportation = 0
 
@@ -239,21 +252,12 @@ class Solution:
                 self.cost_transportation,
             )
 
+        verify_at_most_one_delivery_to_each_customer_per_day()
+
         inventory = self.instance.inventory_start.copy()
         cost_inventory = [0.0 for x in self.instance.nodes]
 
         for d, day in enumerate(self.instance.days):
-            # each customer receives at most one delivery
-            customer_deliveries = [0 for _ in self.instance.nodes]
-            for route in self.routes[d]:
-                for customer, _ in route:
-                    customer_deliveries[customer] += 1
-            for customer, delivery in enumerate(customer_deliveries):
-                if delivery > 1:
-                    err(
-                        f"{day}: {self.instance.nodes[customer]} is delivered {delivery} times, expected <= 1"
-                    )
-
             # check capacity, update depot level and check depot lower level limit
             for r, route in enumerate(self.routes[d]):
                 volume = sum([x for _, x in route])
