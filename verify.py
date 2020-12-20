@@ -72,6 +72,12 @@ class Solution:
         def err(error):
             raise self.ReadError(f"Read error on line {lineno}: {error}")
 
+        def err_expected(expected_str, actual):
+            if actual is None:
+                err(f"missing {expected_str}")
+            else:
+                err(f"expected {expected_str}, got '{actual}'")
+
         def next_line(expected):
             nonlocal lineno
             lineno += 1
@@ -83,7 +89,7 @@ class Solution:
             try:
                 return int(value)
             except ValueError:
-                err(f"expected (integral) {description}, got '{value}'")
+                err_expected(f"(integral) {description}", value)
 
         def parse_int_line(description):
             line = next_line(description)
@@ -93,24 +99,28 @@ class Solution:
             try:
                 return float(value)
             except ValueError:
-                err(f"expected {description}, got '{value}'")
+                err_expected(description, value)
 
         def parse_float_line(description):
             line = next_line(description)
             return parse_float(description, line)
 
+        def check_expected(actual, expected, info=None):
+            if actual != expected:
+                info_str = "" if info is None else f" {info}"
+                err_expected(f"'{expected}'{info_str}", actual)
+
         def expect_day_line(d):
             day = self.instance.days[d]
             line = next_line(f"'{day}'")
-            if line != day:
-                err(f"expected '{day}', got '{line}'")
+            check_expected(line, day)
 
         def expect_route_line(r):
             route = self.instance.routes[r]
             line = next_line(f"'{route}: <route>'")
             data = line.split(": ")
             if len(data) != 2 or data[0] != route:
-                err(f"expected '{route}: <route>', got '{line}'")
+                err_expected(f"'{route}: <route>'", line)
 
             return data[1]
 
@@ -127,18 +137,15 @@ class Solution:
                     if customer_str == "0":
                         return []
                     else:
-                        err(f"expected depot (0) at end of route, got '{customer_str}'")
+                        err_expected("depot (0) at end of route", customer_str)
 
                 customer = parse_int("customer in route", customer_str)
                 if customer >= self.instance.num_nodes:
                     err(f"customer {customer} does not exist")
-                if open_par != "(":
-                    err(f"expected '(' in route, got '{open_par}'")
+                check_expected(open_par, "(", info="in route")
                 quantity = parse_int("delivered quantity in route", quantity_str)
-                if close_par != ")":
-                    err(f"expected ')' in route, got '{close_par}'")
-                if dash != "-":
-                    err(f"expected '-' delimiter in route, got '{dash}'")
+                check_expected(close_par, ")", info="in route")
+                check_expected(dash, "-", info="delimiter in route")
                 return [(customer, quantity)] + parse_remaining_route(*remaining)
 
             if start_dash is None:
