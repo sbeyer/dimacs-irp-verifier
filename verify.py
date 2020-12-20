@@ -235,13 +235,18 @@ class Solution:
                         f"{day}: {node_names[customer]} is delivered {delivery} times, expected <= 1"
                     )
 
-            # check capacity and update depot level
+            # check capacity, update depot level and check depot lower level limit
             for r, route in enumerate(self.routes[d]):
                 volume = sum([x for _, x in route])
-                inventory[0] -= volume
                 if volume > self.instance.capacity:
                     err(
                         f"{day}: {route_names[r]}: Capacity is exceeded: got {volume}, expected <= {self.instance.capacity}"
+                    )
+
+                inventory[0] -= volume
+                if inventory[0] < self.instance.inventory_min[0]:
+                    err(
+                        f"{day}: {route_names[r]}: new level of {node_names[0]} becomes {inventory[0]} units, expected >= {self.instance.inventory_min[i]}"
                     )
 
             # update inventories by delivery and check upper level limit
