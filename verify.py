@@ -43,6 +43,14 @@ class Instance:
 
     def __append_node_lists_by_customer(self, index, x, y, start, u, l, change, cost):
         self.pos.append((float(x), float(y)))
+        if int(start) < int(l):
+            print(
+                f"Warning: start inventory level {start} of customer {index} is smaller than the customer's minimum inventory level {l}"
+            )
+        if int(start) > int(u):
+            print(
+                f"Warning: start inventory level {start} of customer {index} is greater than the customer's maximum inventory level {u}"
+            )
         self.inventory_start.append(int(start))
         self.inventory_max.append(int(u))
         self.inventory_min.append(int(l))
@@ -219,18 +227,6 @@ class Solution:
         inventory = self.instance.inventory_start.copy()
         cost_transportation = 0
         cost_inventory = [0.0 for x in self.instance.nodes]
-
-        # this should never happen, because it means the instance is invalid, not the solution
-        # but we still check for it:
-        for i, level in enumerate(inventory):
-            if level < self.instance.inventory_min[i]:
-                err(
-                    f"Start inventory level of {self.instance.nodes[i]} < minimum inventory level"
-                )
-            if level > self.instance.inventory_max[i]:
-                err(
-                    f"Start inventory level of {self.instance.nodes[i]} > maximum inventory level"
-                )
 
         for d, day in enumerate(self.instance.days):
             # compute route costs
