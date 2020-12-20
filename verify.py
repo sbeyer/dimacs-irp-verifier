@@ -23,6 +23,11 @@ class Instance:
         meta_data = [int(val) for val in meta_line.split()]
         self.num_nodes, self.num_days, self.capacity, self.num_vehicles = meta_data
 
+        # auxiliary lists for fast access to names
+        self.nodes = ["depot"] + [f"customer {i}" for i in range(1, self.num_nodes + 1)]
+        self.days = [f"Day {d + 1}" for d in range(self.num_days)]
+        self.routes = [f"Route {r + 1}" for r in range(self.num_vehicles)]
+
         self.__init_node_lists_by_depot(*depot_line.split())
 
         for customer_line in customer_lines:
@@ -201,26 +206,21 @@ class Solution:
 
         inventory = self.instance.inventory_start.copy()
         cost_transportation = 0
-        node_names = ["depot"] + [
-            f"customer {i}" for i in range(1, self.instance.num_nodes + 1)
-        ]
-        cost_inventory = [0.0 for x in node_names]
-        day_names = [f"Day {d + 1}" for d in range(self.instance.num_days)]
-        route_names = [f"Route {r + 1}" for r in range(self.instance.num_vehicles)]
+        cost_inventory = [0.0 for x in self.instance.nodes]
 
         # this should never happen, because it means the instance is invalid, not the solution
         # but we still check for it:
         for i, level in enumerate(inventory):
             if level < self.instance.inventory_min[i]:
                 err(
-                    f"Start inventory level of {node_names[i]} < minimum inventory level"
+                    f"Start inventory level of {self.instance.nodes[i]} < minimum inventory level"
                 )
             if level > self.instance.inventory_max[i]:
                 err(
-                    f"Start inventory level of {node_names[i]} > maximum inventory level"
+                    f"Start inventory level of {self.instance.nodes[i]} > maximum inventory level"
                 )
 
-        for d, day in enumerate(day_names):
+        for d, day in enumerate(self.instance.days):
             # compute route costs
             for route in self.routes[d]:
                 tour = [0] + [x for x, _ in route] + [0]
@@ -228,14 +228,14 @@ class Solution:
                     cost_transportation += rounded_distance(s, t)
 
             # each customer receives at most one delivery
-            customer_deliveries = [0 for _ in node_names]
+            customer_deliveries = [0 for _ in self.instance.nodes]
             for route in self.routes[d]:
                 for customer, _ in route:
                     customer_deliveries[customer] += 1
             for customer, delivery in enumerate(customer_deliveries):
                 if delivery > 1:
                     err(
-                        f"{day}: {node_names[customer]} is delivered {delivery} times, expected <= 1"
+                        f"{day}: {self.instance.nodes[customer]} is delivered {delivery} times, expected <= 1"
                     )
 
             # check capacity, update depot level and check depot lower level limit
@@ -243,13 +243,13 @@ class Solution:
                 volume = sum([x for _, x in route])
                 if volume > self.instance.capacity:
                     err(
-                        f"{day}: {route_names[r]}: Capacity is exceeded: got {volume}, expected <= {self.instance.capacity}"
+                        f"{day}: {self.instance.routes[r]}: Capacity is exceeded: got {volume}, expected <= {self.instance.capacity}"
                     )
 
                 inventory[0] -= volume
                 if inventory[0] < self.instance.inventory_min[0]:
                     err(
-                        f"{day}: {route_names[r]}: new level of {node_names[0]} becomes {inventory[0]} units, expected >= {self.instance.inventory_min[i]}"
+                        f"{day}: {self.instance.routes[r]}: new level of {self.instance.nodes[0]} becomes {inventory[0]} units, expected >= {self.instance.inventory_min[i]}"
                     )
 
             # update inventories by delivery and check upper level limit
@@ -258,7 +258,7 @@ class Solution:
                     inventory[customer] += delivery
                     if inventory[customer] > self.instance.inventory_max[customer]:
                         err(
-                            f"{day}: {route_names[r]}: {node_names[customer]} is delivered {delivery} units, new level is {inventory[customer]}, expected <= {self.instance.inventory_max[customer]}"
+                            f"{day}: {self.instance.routes[r]}: {self.instance.nodes[customer]} is delivered {delivery} units, new level is {inventory[customer]}, expected <= {self.instance.inventory_max[customer]}"
                         )
 
             # update inventories by daily change and check lower level limit
@@ -266,7 +266,7 @@ class Solution:
                 inventory[i] += change
                 if inventory[i] < self.instance.inventory_min[i]:
                     err(
-                        f"{day}: new level of {node_names[i]} becomes {inventory[i]} units, expected >= {self.instance.inventory_min[i]}"
+                        f"{day}: new level of {self.instance.nodes[i]} becomes {inventory[i]} units, expected >= {self.instance.inventory_min[i]}"
                     )
 
             # update inventory costs
