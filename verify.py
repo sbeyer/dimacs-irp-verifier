@@ -237,6 +237,15 @@ class Solution:
                             f"{day}: {self.instance.nodes[customer]} is delivered {delivery} times, expected <= 1"
                         )
 
+        def verify_capacities():
+            for d, day in enumerate(self.instance.days):
+                for r, route in enumerate(self.routes[d]):
+                    volume = sum([quantity for _, quantity in route])
+                    if volume > self.instance.capacity:
+                        err(
+                            f"{day}: {self.instance.routes[r]}: Capacity is exceeded: got {volume}, expected <= {self.instance.capacity}"
+                        )
+
         def verify_transportation_costs():
             cost_transportation = 0
 
@@ -253,19 +262,15 @@ class Solution:
             )
 
         verify_at_most_one_delivery_to_each_customer_per_day()
+        verify_capacities()
 
         inventory = self.instance.inventory_start.copy()
         cost_inventory = [0.0 for x in self.instance.nodes]
 
         for d, day in enumerate(self.instance.days):
-            # check capacity, update depot level and check depot lower level limit
+            # update depot level and check depot lower level limit
             for r, route in enumerate(self.routes[d]):
                 volume = sum([x for _, x in route])
-                if volume > self.instance.capacity:
-                    err(
-                        f"{day}: {self.instance.routes[r]}: Capacity is exceeded: got {volume}, expected <= {self.instance.capacity}"
-                    )
-
                 inventory[0] -= volume
                 if inventory[0] < self.instance.inventory_min[0]:
                     err(
