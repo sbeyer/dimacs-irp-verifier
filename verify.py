@@ -250,7 +250,7 @@ class Solution:
                     inventory[customer] += delivery
                     if inventory[customer] > self.instance.inventory_max[customer]:
                         err(
-                            f"{day}: {route_names[r]}: {node_names[customer]} is delivered {delivery} units, new level is {inventory[customer]}, expecting <= {self.instance.inventory_max[customer]}"
+                            f"{day}: {route_names[r]}: {node_names[customer]} is delivered {delivery} units, new level is {inventory[customer]}, expected <= {self.instance.inventory_max[customer]}"
                         )
 
             # update inventories by daily change and check lower level limit
@@ -258,7 +258,7 @@ class Solution:
                 inventory[i] += change
                 if inventory[i] < self.instance.inventory_min[i]:
                     err(
-                        f"{day}: new level of {node_names[i]} becomes {inventory[i]} units, expecting >= {self.instance.inventory_min[i]}"
+                        f"{day}: new level of {node_names[i]} becomes {inventory[i]} units, expected >= {self.instance.inventory_min[i]}"
                     )
 
             # update inventory costs
