@@ -62,7 +62,7 @@ class Solution:
         lineno = 0
 
         def err(error):
-            raise self.ReadError(f"{handle.name}:{lineno}: {error}")
+            raise self.ReadError(f"Read error on line {lineno}: {error}")
 
         def expect_int(description, value):
             try:
@@ -412,13 +412,9 @@ def verify(fn_instance, fn_solution, processors):
 
     try:
         solution = Solution(instance, solution)
-    except Solution.ReadError as err:
-        return fail(f"Read error {err}")
-
-    try:
         solution.verify_solution()
         solution.verify_time(processors)
-    except Solution.VerificationError as err:
+    except Exception as err:
         return fail(f"{fn_solution}: {err}")
 
     return True
