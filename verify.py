@@ -261,7 +261,7 @@ class Solution:
                 inventory[0] -= volume
                 if inventory[0] < self.instance.inventory_min[0]:
                     err(
-                        f"{day}: {self.instance.routes[r]}: new level of {self.instance.nodes[0]} becomes {inventory[0]} units, expected >= {self.instance.inventory_min[i]}"
+                        f"{day}: {self.instance.routes[r]}: new level of {self.instance.nodes[0]} becomes {inventory[0]} units, expected >= {self.instance.inventory_min[0]}"
                     )
 
             # update inventories by delivery and check upper level limit
