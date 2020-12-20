@@ -72,18 +72,6 @@ class Solution:
         def err(error):
             raise self.ReadError(f"Read error on line {lineno}: {error}")
 
-        def expect_int(description, value):
-            try:
-                return int(value)
-            except ValueError:
-                err(f"expected (integral) {description}, got '{value}'")
-
-        def expect_float(description, value):
-            try:
-                return float(value)
-            except ValueError:
-                err(f"expected {description}, got '{value}'")
-
         def next_line(expected):
             nonlocal lineno
             lineno += 1
@@ -91,89 +79,106 @@ class Solution:
                 err(f"missing line; expected {expected}")
             return lines.pop(0)
 
-        self.routes = []
+        def parse_int(description, value):
+            try:
+                return int(value)
+            except ValueError:
+                err(f"expected (integral) {description}, got '{value}'")
 
-        for day_idx in range(instance.num_days):
-            day = day_idx + 1
-            line = next_line(f"'Day {day}'")
-            data = line.split(" ")
-            if len(data) != 2 or data[0] != "Day" or data[1] != str(day):
-                err(f"expected 'Day {day}', got '{line}'")
+        def parse_int_line(description):
+            line = next_line(description)
+            return parse_int(description, line)
 
-            self.routes.append([])
+        def parse_float(description, value):
+            try:
+                return float(value)
+            except ValueError:
+                err(f"expected {description}, got '{value}'")
 
-            for route_idx in range(instance.num_vehicles):
-                route = route_idx + 1
-                line = next_line(f"'Route {route}: <route>'")
-                data = line.split(": ")
-                if len(data) != 2:
-                    err(f"expected 'Route {route}: <route>', got '{line}'")
+        def parse_float_line(description):
+            line = next_line(description)
+            return parse_float(description, line)
 
-                left = data[0].split(" ")
-                if len(left) != 2 or left[0] != "Route" or left[1] != str(route):
-                    err(f"expected 'Route {route}: <route>', got '{line}'")
+        def expect_day_line(d):
+            day = self.instance.days[d]
+            line = next_line(f"'{day}'")
+            if line != day:
+                err(f"expected '{day}', got '{line}'")
 
-                right = data[1].split(" ")
-                if len(right) < 3:
-                    err(
-                        "route is too short to be valid; use '0 - 0' for an empty route"
-                    )
-                if right.pop(0) != "0":
-                    err("route does not start at depot")
-                if right.pop() != "0":
-                    err("route does not end at depot")
-                if right.pop(0) != "-":
-                    err("expected first node delimiter '-' in route")
+        def expect_route_line(r):
+            route = self.instance.routes[r]
+            line = next_line(f"'{route}: <route>'")
+            data = line.split(": ")
+            if len(data) != 2 or data[0] != route:
+                err(f"expected '{route}: <route>', got '{line}'")
 
-                self.routes[day_idx].append([])
+            return data[1]
 
-                if len(right) > 0:
-                    for idx, token in enumerate(right):
-                        mod = idx % 5
-                        if mod == 0:
-                            current = expect_int("customer in route", token)
-                            if current >= instance.num_nodes:
-                                err(f"customer {current} does not exist")
-                        elif mod == 1:
-                            if token != "(":
-                                err("expected '(' in route")
-                        elif mod == 2:
-                            current = (
-                                current,
-                                expect_int("delivered quantity in route", token),
-                            )
-                        elif mod == 3:
-                            if token != ")":
-                                err("expected ')' in route")
-                        elif mod == 4:
-                            if token != "-":
-                                err("expected '-' delimiter in route")
-                            self.routes[day_idx][route_idx].append(current)
+        def parse_route(start_zero=None, start_dash=None, *route):
+            def parse_remaining_route(
+                customer_str=None,
+                open_par=None,
+                quantity_str=None,
+                close_par=None,
+                dash=None,
+                *remaining,
+            ):
+                if open_par is None:
+                    if customer_str == "0":
+                        return []
+                    else:
+                        err(f"expected depot (0) at end of route, got '{customer_str}'")
 
-                    if len(right) % 5 != 0:
-                        err("route is invalid, check format!")
+                customer = parse_int("customer in route", customer_str)
+                if customer >= self.instance.num_nodes:
+                    err(f"customer {customer} does not exist")
+                if open_par != "(":
+                    err(f"expected '(' in route, got '{open_par}'")
+                quantity = parse_int("delivered quantity in route", quantity_str)
+                if close_par != ")":
+                    err(f"expected ')' in route, got '{close_par}'")
+                if dash != "-":
+                    err(f"expected '-' delimiter in route, got '{dash}'")
+                return [(customer, quantity)] + parse_remaining_route(*remaining)
 
-        expected = "total transportation cost"
-        line = next_line(expected)
-        self.cost_transportation = expect_int(expected, line)
+            if start_dash is None:
+                err("route is too short to be valid; use '0 - 0' for an empty route")
+            if start_zero != "0":
+                err("route does not start at depot")
+            if start_dash != "-":
+                err("expected first node delimiter '-' in route")
 
-        expected = "total inventory cost at customers"
-        line = next_line(expected)
-        self.cost_inventory_customers = expect_float(expected, line)
+            return parse_remaining_route(*route)
 
-        expected = "total inventory cost at depot"
-        line = next_line(expected)
-        self.cost_inventory_depot = expect_float(expected, line)
+        def parse_routes():
+            routes = []
 
-        expected = "total solution cost"
-        line = next_line(expected)
-        self.cost = expect_float(expected, line)
+            for r in range(self.instance.num_vehicles):
+                route = expect_route_line(r).split(" ")
+                route = parse_route(*route)
+                routes.append(route)
 
+            return routes
+
+        def parse_days_with_routes():
+            all_routes = []
+
+            for d in range(self.instance.num_days):
+                expect_day_line(d)
+                routes = parse_routes()
+                all_routes.append(routes)
+
+            return all_routes
+
+        self.routes = parse_days_with_routes()
+        self.cost_transportation = parse_int_line("total transportation cost")
+        self.cost_inventory_customers = parse_float_line(
+            "total inventory cost at customers"
+        )
+        self.cost_inventory_depot = parse_float_line("total inventory cost at depot")
+        self.cost = parse_float_line("total solution cost")
         self.processor = next_line("processor")
-
-        expected = "solution time in seconds"
-        line = next_line(expected)
-        self.time = expect_float(expected, line)
+        self.time = parse_float_line("solution time in seconds")
 
         for line in lines:
             lineno += 1
