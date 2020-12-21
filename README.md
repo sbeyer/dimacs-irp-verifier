@@ -12,12 +12,25 @@ Usage:
  * second argument (optional) is the directory containing the solution file;
    if omitted, the directory of the instance file is assumed
 
+Behavior notes:
+ * PassMark data is fetched and saved into the file `processor.json` in the current
+   directory whenever that file cannot be found (e.g., on the first run)
+ * successful verification is indicated by a message on standard output
+   and zero exit code
+ * if reading or verification failed, the first error is printed to standard output
+   and exit code is non-zero
+ * standard error output is kept clean except in case of an unhandled exception
+
 Examples:
 ```
-$ python3 verify.py
+[ ]$ python3 verify.py
 Usage: verify.py <instance file> [<directory containing solution file>]
-$ python3 verify.py instances/S_abs5n5_4_L3.dat
-Failed to open instance file instances/out_S_abs5n5_4_L3.txt: No such file or directory
-$ python3 verify.py instances/S_abs5n5_4_L3.dat solutions
-$ # checked solutions/out_S_abs5n5_4_L3.txt based on instances/S_abs5n5_4_L3.dat
+[✘]$ python3 verify.py instances/S_abs5n5_4_L3.dat
+Failed to open solution file instances/out_S_abs5n5_4_L3.txt: No such file or directory
+[✘]$ python3 verify.py instances/S_abs5n5_4_L3.dat solutions/algo1
+Verification of solutions/algo1/out_S_abs5n5_4_L3.txt successful
+[✔]$ python3 verify.py instances/S_abs5n5_4_L3.dat solutions/algo2
+solutions/algo2/out_S_abs5n5_4_L3.txt: Time verification error: computation time of 1612.42 seconds exceeds time limit of 1524.13 seconds
+[✘]$ python3 verify.py instances/S_abs5n5_4_L3.dat solutions/algo3
+solutions/algo3/out_S_abs5n5_4_L3.txt: Solution verification error: Day 3: Route 1: inventory level of customer 4 too high; got 173, expected <= 162
 ```
