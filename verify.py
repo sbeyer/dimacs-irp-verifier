@@ -280,33 +280,29 @@ class Solution:
             cost_inventory = [0.0] * self.instance.num_nodes
 
             for d, day_routes in enumerate(self.routes):
-                # update depot level and check depot lower level limit
-                for r, route in enumerate(day_routes):
-                    volume = sum([x for _, x in route])
-                    inventory[0] -= volume
-                    if inventory[0] < self.instance.inventory_min[0]:
-                        err(
-                            f"inventory level of {self.instance.nodes[0]} too low",
-                            actual=inventory[0],
-                            expected=f">= {self.instance.inventory_min[0]}",
-                            day=d,
-                            route=r,
-                        )
-
-                # update inventories by delivery and check upper level limit
+                # step one: deliveries
                 for r, route in enumerate(day_routes):
                     for customer, delivery in route:
                         inventory[customer] += delivery
+                        inventory[0] -= delivery
                         if inventory[customer] > self.instance.inventory_max[customer]:
                             err(
-                                f"{self.instance.nodes[customer]} is delivered {delivery} units, new level is too high",
+                                f"inventory level of {self.instance.nodes[customer]} too high",
                                 actual=inventory[customer],
                                 expected=f"<= {self.instance.inventory_max[customer]}",
                                 day=d,
                                 route=r,
                             )
+                        if inventory[0] < self.instance.inventory_min[0]:
+                            err(
+                                f"inventory level of {self.instance.nodes[0]} too low",
+                                actual=inventory[0],
+                                expected=f">= {self.instance.inventory_min[0]}",
+                                day=d,
+                                route=r,
+                            )
 
-                # update inventories by daily change and check lower level limit
+                # step two: daily change (production at depot, consumption at customers)
                 for i, change in enumerate(self.instance.inventory_change):
                     inventory[i] += change
                     if inventory[i] < self.instance.inventory_min[i]:
