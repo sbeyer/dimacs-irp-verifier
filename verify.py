@@ -275,68 +275,73 @@ class Solution:
                 self.cost_transportation,
             )
 
-        verify_at_most_one_delivery_to_each_customer_per_day()
-        verify_capacities()
+        def verify_inventory_limits_and_cost():
+            inventory = self.instance.inventory_start.copy()
+            cost_inventory = [0.0] * self.instance.num_nodes
 
-        inventory = self.instance.inventory_start.copy()
-        cost_inventory = [0.0 for x in self.instance.nodes]
-
-        for d, day_routes in enumerate(self.routes):
-            # update depot level and check depot lower level limit
-            for r, route in enumerate(day_routes):
-                volume = sum([x for _, x in route])
-                inventory[0] -= volume
-                if inventory[0] < self.instance.inventory_min[0]:
-                    err(
-                        f"inventory level of {self.instance.nodes[0]} too low",
-                        actual=inventory[0],
-                        expected=f">= {self.instance.inventory_min[0]}",
-                        day=d,
-                        route=r,
-                    )
-
-            # update inventories by delivery and check upper level limit
-            for r, route in enumerate(day_routes):
-                for customer, delivery in route:
-                    inventory[customer] += delivery
-                    if inventory[customer] > self.instance.inventory_max[customer]:
+            for d, day_routes in enumerate(self.routes):
+                # update depot level and check depot lower level limit
+                for r, route in enumerate(day_routes):
+                    volume = sum([x for _, x in route])
+                    inventory[0] -= volume
+                    if inventory[0] < self.instance.inventory_min[0]:
                         err(
-                            f"{self.instance.nodes[customer]} is delivered {delivery} units, new level is too high",
-                            actual=inventory[customer],
-                            expected=f"<= {self.instance.inventory_max[customer]}",
+                            f"inventory level of {self.instance.nodes[0]} too low",
+                            actual=inventory[0],
+                            expected=f">= {self.instance.inventory_min[0]}",
                             day=d,
                             route=r,
                         )
 
-            # update inventories by daily change and check lower level limit
-            for i, change in enumerate(self.instance.inventory_change):
-                inventory[i] += change
-                if inventory[i] < self.instance.inventory_min[i]:
-                    err(
-                        f"inventory level of {self.instance.nodes[i]} too low",
-                        actual=inventory[i],
-                        expected=f">= {self.instance.inventory_min[i]}",
-                        day=d,
-                    )
+                # update inventories by delivery and check upper level limit
+                for r, route in enumerate(day_routes):
+                    for customer, delivery in route:
+                        inventory[customer] += delivery
+                        if inventory[customer] > self.instance.inventory_max[customer]:
+                            err(
+                                f"{self.instance.nodes[customer]} is delivered {delivery} units, new level is too high",
+                                actual=inventory[customer],
+                                expected=f"<= {self.instance.inventory_max[customer]}",
+                                day=d,
+                                route=r,
+                            )
 
-            # update inventory costs
-            for i, cost in enumerate(self.instance.inventory_cost):
-                cost_inventory[i] += cost * inventory[i]
+                # update inventories by daily change and check lower level limit
+                for i, change in enumerate(self.instance.inventory_change):
+                    inventory[i] += change
+                    if inventory[i] < self.instance.inventory_min[i]:
+                        err(
+                            f"inventory level of {self.instance.nodes[i]} too low",
+                            actual=inventory[i],
+                            expected=f">= {self.instance.inventory_min[i]}",
+                            day=d,
+                        )
 
+                # update inventory costs
+                for i, cost in enumerate(self.instance.inventory_cost):
+                    cost_inventory[i] += cost * inventory[i]
+
+            expect_equal_float(
+                "total inventory cost at customers",
+                cost_inventory[0],
+                self.cost_inventory_customers,
+            )
+            expect_equal_float(
+                "total inventory cost at depot",
+                sum(cost_inventory[1:]),
+                self.cost_inventory_depot,
+            )
+
+        verify_at_most_one_delivery_to_each_customer_per_day()
+        verify_capacities()
         verify_transportation_costs()
-
+        verify_inventory_limits_and_cost()
         expect_equal_float(
-            "total inventory cost at customers",
-            cost_inventory[0],
-            self.cost_inventory_customers,
-        )
-        expect_equal_float(
-            "total inventory cost at depot",
-            sum(cost_inventory[1:]),
-            self.cost_inventory_depot,
-        )
-        expect_equal_float(
-            "total cost", self.cost_transportation + sum(cost_inventory), self.cost
+            "total cost",
+            self.cost_transportation
+            + self.cost_inventory_depot
+            + self.cost_inventory_customers,
+            self.cost,
         )
 
     def verify_time(self, processors):
