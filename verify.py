@@ -203,7 +203,15 @@ class Solution:
     def verify_solution(self):
         """Verifies the solution or raises a VerificationError"""
 
-        def err(error):
+        def err(error, day=None, route=None, actual=None, expected=None):
+            if route is not None:
+                error = f"{self.instance.routes[route]}: {error}"
+            if day is not None:
+                error = f"{self.instance.days[day]}: {error}"
+            if actual is not None:
+                error += f"; got {actual}"
+            if expected is not None:
+                error += f", expected {expected}"
             raise self.VerificationError(f"Solution verification error: {error}")
 
         def expect_equal(description, expected, actual):
@@ -225,25 +233,31 @@ class Solution:
             return int(math.sqrt((s_x - t_x) ** 2 + (s_y - t_y) ** 2) + 0.5)
 
         def verify_at_most_one_delivery_to_each_customer_per_day():
-            for d, day in enumerate(self.instance.days):
-                customer_deliveries = [0 for _ in self.instance.nodes]
-                for route in self.routes[d]:
+            for d, day_routes in enumerate(self.routes):
+                customer_deliveries = [0] * self.instance.num_nodes
+                for route in day_routes:
                     for customer, _ in route:
                         customer_deliveries[customer] += 1
 
                 for customer, delivery in enumerate(customer_deliveries):
                     if delivery > 1:
                         err(
-                            f"{day}: {self.instance.nodes[customer]} is delivered {delivery} times, expected <= 1"
+                            f"{self.instance.nodes[customer]} is delivered {delivery} times",
+                            expected="<= 1",
+                            day=d,
                         )
 
         def verify_capacities():
-            for d, day in enumerate(self.instance.days):
-                for r, route in enumerate(self.routes[d]):
+            for d, day_routes in enumerate(self.routes):
+                for r, route in enumerate(day_routes):
                     volume = sum([quantity for _, quantity in route])
                     if volume > self.instance.capacity:
                         err(
-                            f"{day}: {self.instance.routes[r]}: Capacity is exceeded: got {volume}, expected <= {self.instance.capacity}"
+                            "capacity is exceeded",
+                            actual=volume,
+                            expected=f"<= {self.instance.capacity}",
+                            day=d,
+                            route=r,
                         )
 
         def verify_transportation_costs():
@@ -267,23 +281,31 @@ class Solution:
         inventory = self.instance.inventory_start.copy()
         cost_inventory = [0.0 for x in self.instance.nodes]
 
-        for d, day in enumerate(self.instance.days):
+        for d, day_routes in enumerate(self.routes):
             # update depot level and check depot lower level limit
-            for r, route in enumerate(self.routes[d]):
+            for r, route in enumerate(day_routes):
                 volume = sum([x for _, x in route])
                 inventory[0] -= volume
                 if inventory[0] < self.instance.inventory_min[0]:
                     err(
-                        f"{day}: {self.instance.routes[r]}: new level of {self.instance.nodes[0]} becomes {inventory[0]} units, expected >= {self.instance.inventory_min[0]}"
+                        f"inventory level of {self.instance.nodes[0]} too low",
+                        actual=inventory[0],
+                        expected=f">= {self.instance.inventory_min[0]}",
+                        day=d,
+                        route=r,
                     )
 
             # update inventories by delivery and check upper level limit
-            for r, route in enumerate(self.routes[d]):
+            for r, route in enumerate(day_routes):
                 for customer, delivery in route:
                     inventory[customer] += delivery
                     if inventory[customer] > self.instance.inventory_max[customer]:
                         err(
-                            f"{day}: {self.instance.routes[r]}: {self.instance.nodes[customer]} is delivered {delivery} units, new level is {inventory[customer]}, expected <= {self.instance.inventory_max[customer]}"
+                            f"{self.instance.nodes[customer]} is delivered {delivery} units, new level is too high",
+                            actual=inventory[customer],
+                            expected=f"<= {self.instance.inventory_max[customer]}",
+                            day=d,
+                            route=r,
                         )
 
             # update inventories by daily change and check lower level limit
@@ -291,7 +313,10 @@ class Solution:
                 inventory[i] += change
                 if inventory[i] < self.instance.inventory_min[i]:
                     err(
-                        f"{day}: new level of {self.instance.nodes[i]} becomes {inventory[i]} units, expected >= {self.instance.inventory_min[i]}"
+                        f"inventory level of {self.instance.nodes[i]} too low",
+                        actual=inventory[i],
+                        expected=f">= {self.instance.inventory_min[i]}",
+                        day=d,
                     )
 
             # update inventory costs
