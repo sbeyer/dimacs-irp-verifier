@@ -332,17 +332,20 @@ class Solution:
                 self.cost_inventory_depot,
             )
 
+        def verify_total_cost():
+            expect_equal_float(
+                "total cost",
+                self.cost_transportation
+                + self.cost_inventory_depot
+                + self.cost_inventory_customers,
+                self.cost,
+            )
+
         verify_at_most_one_delivery_to_each_customer_per_day()
         verify_capacities()
         verify_transportation_costs()
         verify_inventory_limits_and_cost()
-        expect_equal_float(
-            "total cost",
-            self.cost_transportation
-            + self.cost_inventory_depot
-            + self.cost_inventory_customers,
-            self.cost,
-        )
+        verify_total_cost()
 
     def verify_time(self, processors):
         """Verifies the processor/time part of the Solution or raises a VerificationError"""
