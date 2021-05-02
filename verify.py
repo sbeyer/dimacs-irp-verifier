@@ -311,12 +311,12 @@ class Solution:
 
             expect_equal_float(
                 "total inventory cost at customers",
-                cost_inventory[0],
+                sum(cost_inventory[1:]),
                 self.cost_inventory_customers,
             )
             expect_equal_float(
                 "total inventory cost at depot",
-                sum(cost_inventory[1:]),
+                cost_inventory[0],
                 self.cost_inventory_depot,
             )
 
