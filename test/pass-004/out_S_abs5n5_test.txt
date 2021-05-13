@@ -1,0 +1,45 @@
+# First solution
+Day 1
+Route 1: 0 - 4 ( 81 ) - 0
+Route 2: 0 - 0
+Route 3: 0 - 0
+Route 4: 0 - 0
+Day 2
+Route 1: 0 - 3 ( 72 ) - 0
+Route 2: 0 - 4 ( 81 ) - 0
+Route 3: 0 - 5 ( 15 ) - 2 ( 47 ) - 1 ( 19 ) - 0
+Route 4: 0 - 0
+Day 3
+Route 1: 0 - 0
+Route 2: 0 - 0
+Route 3: 0 - 0
+Route 4: 0 - 0
+1548
+20.0799997
+41.7600003
+1609.8399993
+Intel Core i3-6300 @ 3.80GHz
+1524.1300003
+
+# Second solution
+Day 1
+Route 1: 0 - 1 ( 19 ) - 5 ( 15 ) - 0
+Route 2: 0 - 4 ( 81 ) - 0
+Route 3: 0 - 3 ( 72 ) - 0
+Route 4: 0 - 2 ( 47 ) - 0
+Day 2
+Route 1: 0 - 4 ( 81 ) - 0
+Route 2: 0 - 3 ( 72 ) - 0
+Route 3: 0 - 2 ( 47 ) - 0
+Route 4: 0 - 1 ( 19 ) - 5 ( 15 ) - 0
+Day 3
+Route 1: 0 - 4 ( 81 ) - 0
+Route 2: 0 - 3 ( 72 ) - 0
+Route 3: 0 - 2 ( 47 ) - 0
+Route 4: 0 - 1 ( 19 ) - 5 ( 15 ) - 0
+5049
+50.52
+20.97
+5120.49
+Intel Core i3-6300 @ 3.80GHz
+58.23
