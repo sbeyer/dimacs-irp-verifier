@@ -442,11 +442,12 @@ def prepare_solution(lines):
     commented_solutions = [([], lines)]
 
     # Special mode verification is a hack to allow verifying the output of a solver.
-    # For this, the first line has to start with a `#'. Then, all lines starting with
-    # `#' are ignored for verification but just printed by the verifier. Moreover,
-    # and most importantly, special mode allows to verify many solutions for one
-    # instance. Correct "Day 1" lines are considered as delimiters.
-    if len(lines) > 0 and len(lines[0]) > 0 and lines[0][0] == "#":
+    # To enable special mode, there has to be at least one line starting with a `#'.
+    # Then, all lines starting with `#' are ignored for verification but just printed by the verifier.
+    # Moreover, and most importantly, special mode allows to verify many solutions for one instance.
+    # Correct "Day 1" lines are considered as delimiters for solutions.
+    # Any line that does not begin with `#' before the first "Day 1" line is ignored.
+    if any([len(line) > 0 and line[0] == "#" for line in lines]):
         delimiter = "Day 1"
         commented_solutions = [([], [])]
 
@@ -462,7 +463,7 @@ def prepare_solution(lines):
         prelude, *commented_solutions = commented_solutions
         commented_solutions[0] = (
             prelude[0] + commented_solutions[0][0],
-            prelude[1] + commented_solutions[0][1],
+            commented_solutions[0][1],
         )
 
     return commented_solutions
