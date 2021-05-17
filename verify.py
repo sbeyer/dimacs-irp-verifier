@@ -450,14 +450,18 @@ def prepare_solution(lines):
     if any([len(line) > 0 and line[0] == "#" for line in lines]):
         delimiter = "Day 1"
         commented_solutions = [([], [])]
+        comment_block = []
 
         for line in lines:
             if line == delimiter:
-                commented_solutions.append(([], []))
+                commented_solutions.append((comment_block, []))
+                comment_block = []
 
             if len(line) > 0 and line[0] == "#":
-                commented_solutions[-1][0].append(line)
+                comment_block.append(line)
             else:
+                commented_solutions[-1][0].extend(comment_block)
+                comment_block = []
                 commented_solutions[-1][1].append(line)
 
         prelude, *commented_solutions = commented_solutions
