@@ -447,8 +447,8 @@ def prepare_solution(lines):
     # Moreover, and most importantly, special mode allows to verify many solutions for one instance.
     # Correct "Day 1" lines are considered as delimiters for solutions.
     # Any line that does not begin with `#' before the first "Day 1" line is ignored.
-    if any([len(line) > 0 and line[0] == "#" for line in lines]):
-        delimiter = "Day 1"
+    delimiter = "Day 1"
+    if delimiter in lines and any([len(line) > 0 and line[0] == "#" for line in lines]):
         commented_solutions = [([], [])]
         comment_block = []
 
