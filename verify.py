@@ -70,11 +70,10 @@ class Solution:
     class VerificationError(Error):
         pass
 
-    def __init__(self, instance, handle):
-        """Reads a solution from handle and initializes Solution members"""
+    def __init__(self, instance, lines):
+        """Reads a line-by-line solution and initializes Solution members"""
         self.instance = instance
 
-        lines = handle.read().splitlines()
         lineno = 0
 
         def err(error):
@@ -438,6 +437,42 @@ def obtain_passmark_data():
     return processors
 
 
+def prepare_solution(lines):
+    # Preparation for normal verification
+    commented_solutions = [([], lines)]
+
+    # Special mode verification is a hack to allow verifying the output of a solver.
+    # To enable special mode, there has to be at least one line starting with a `#'.
+    # Then, all lines starting with `#' are ignored for verification but just printed by the verifier.
+    # Moreover, and most importantly, special mode allows to verify many solutions for one instance.
+    # Correct "Day 1" lines are considered as delimiters for solutions.
+    # Any line that does not begin with `#' before the first "Day 1" line is ignored.
+    delimiter = "Day 1"
+    if delimiter in lines and any([len(line) > 0 and line[0] == "#" for line in lines]):
+        commented_solutions = [([], [])]
+        comment_block = []
+
+        for line in lines:
+            if line == delimiter:
+                commented_solutions.append((comment_block, []))
+                comment_block = []
+
+            if len(line) > 0 and line[0] == "#":
+                comment_block.append(line)
+            else:
+                commented_solutions[-1][0].extend(comment_block)
+                comment_block = []
+                commented_solutions[-1][1].append(line)
+
+        prelude, *commented_solutions = commented_solutions
+        commented_solutions[0] = (
+            prelude[0] + commented_solutions[0][0],
+            commented_solutions[0][1],
+        )
+
+    return commented_solutions
+
+
 def verify(fn_instance, fn_solution, processors):
     def fail(error):
         print(error)
@@ -463,9 +498,14 @@ def verify(fn_instance, fn_solution, processors):
         return fail(f"Failed to read instance file {fn_instance}: {err}")
 
     try:
-        solution = Solution(instance, solution)
-        solution.verify_solution()
-        solution.verify_time(processors)
+        commented_solutions = prepare_solution(solution.read().splitlines())
+        for comments, lines in commented_solutions:
+            for comment in comments:
+                print(comment)
+
+            solution = Solution(instance, lines)
+            solution.verify_solution()
+            solution.verify_time(processors)
     except Solution.Error as err:
         return fail(f"{fn_solution}: {err}")
 
