@@ -35,10 +35,10 @@ solutions/algo2/out_S_abs5n5_4_L3.txt: Time verification error: computation time
 solutions/algo3/out_S_abs5n5_4_L3.txt: Solution verification error: Day 3: Route 1: inventory level of customer 4 too high; got 173, expected <= 162
 ```
 
-Special mode:
- * intention: allow use informational output from a solver in development for
-   verification; such a solver might output intermediate solutions
+Experimental special mode for solvers in development:
+ * intention: a solver in development might output intermediate solutions
+   as well as informational output; we should handle that well!
  * the mode is enabled if there is a line beginning with `#` in the solution file
- * `#` lines are printed by the verification tool, but ignored for verification
+ * `#` lines are printed as informational output, but ignored for verification
  * non-`#` lines before the first solution are ignored
  * every solution is checked
