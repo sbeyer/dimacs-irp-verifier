@@ -439,7 +439,7 @@ def obtain_passmark_data():
 
 def prepare_solution(lines):
     # Preparation for normal verification
-    commented_solutions = [([], lines)]
+    commented_solutions = [(0, [], lines)]
 
     # Special mode verification is a hack to allow verifying the output of a solver.
     # To enable special mode, there has to be at least one line starting with a `#'.
@@ -449,25 +449,29 @@ def prepare_solution(lines):
     # Any line that does not begin with `#' before the first "Day 1" line is ignored.
     delimiter = "Day 1"
     if delimiter in lines and any([len(line) > 0 and line[0] == "#" for line in lines]):
-        commented_solutions = [([], [])]
+        commented_solutions = [(0, [], [])]
         comment_block = []
+        lineno = 0
 
         for line in lines:
+            lineno += 1
+
             if line == delimiter:
-                commented_solutions.append((comment_block, []))
+                commented_solutions.append((lineno, comment_block, []))
                 comment_block = []
 
             if len(line) > 0 and line[0] == "#":
                 comment_block.append(line)
             else:
-                commented_solutions[-1][0].extend(comment_block)
+                commented_solutions[-1][1].extend(comment_block)
                 comment_block = []
-                commented_solutions[-1][1].append(line)
+                commented_solutions[-1][2].append(line)
 
         prelude, *commented_solutions = commented_solutions
         commented_solutions[0] = (
-            prelude[0] + commented_solutions[0][0],
-            commented_solutions[0][1],
+            commented_solutions[0][0],
+            prelude[1] + commented_solutions[0][1],
+            commented_solutions[0][2],
         )
 
     return commented_solutions
@@ -499,9 +503,12 @@ def verify(fn_instance, fn_solution, processors):
 
     try:
         commented_solutions = prepare_solution(solution.read().splitlines())
-        for comments, lines in commented_solutions:
+        for lineno, comments, lines in commented_solutions:
             for comment in comments:
                 print(comment)
+
+            if lineno > 0:
+                print(f"Checking solution from {fn_solution} line {lineno}")
 
             solution = Solution(instance, lines)
             solution.verify_solution()
